@@ -3,13 +3,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAnZ293DVoCT2otLdoVVkhWGQUNbyCbgto",
-  authDomain: "metaverseai-app.firebaseapp.com",
-  projectId: "metaverseai-app",
-  storageBucket: "metaverseai-app.firebasestorage.app",
-  messagingSenderId: "126067997258",
-  appId: "1:126067997258:web:98c9615fc81d69bbf004b3",
-  measurementId: "G-MH5YP3HLK8"
+  apiKey: "AIzaSyB-yhEYGYTH1ipYnF2dW7uZVZIBgj6KvQQ",
+  authDomain: "callpilotai-afc9e.firebaseapp.com",
+  projectId: "callpilotai-afc9e",
+  storageBucket: "callpilotai-afc9e.firebasestorage.app",
+  messagingSenderId: "771355880831",
+  appId: "1:771355880831:web:28712cc265b2dc73137e4a",
+  measurementId: "G-7EGQ12F5HT"
 };
 
 const app = initializeApp(firebaseConfig);
