@@ -58,8 +58,8 @@ export default function Campaigns() {
   const { userProfile } = useAuth();
   const [selectedCampaign, setSelectedCampaign] = useState(mockCampaigns[0]);
 
-  // Check if user has admin role
-  if (userProfile?.role !== 'admin') {
+  // Check if user has Admin role
+  if (userProfile?.role !== 'Admin') {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <Card className="w-full max-w-md text-center shadow-business-lg">

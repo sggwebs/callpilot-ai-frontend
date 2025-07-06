@@ -52,8 +52,8 @@ export default function AIAgents() {
   const [editingScript, setEditingScript] = useState(false);
   const [scriptContent, setScriptContent] = useState(selectedAgent.script);
 
-  // Check if user has admin role
-  if (userProfile?.role !== 'admin') {
+  // Check if user has Admin role
+  if (userProfile?.role !== 'Admin') {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <Card className="w-full max-w-md text-center shadow-business-lg">

@@ -64,21 +64,21 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/ai-agents" element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="Admin">
                 <MainLayout>
                   <AIAgents />
                 </MainLayout>
               </ProtectedRoute>
             } />
             <Route path="/campaigns" element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="Admin">
                 <MainLayout>
                   <Campaigns />
                 </MainLayout>
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="Admin">
                 <MainLayout>
                   <Settings />
                 </MainLayout>

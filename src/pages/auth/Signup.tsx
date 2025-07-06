@@ -14,7 +14,7 @@ export default function Signup() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "agent" as "admin" | "agent"
+    role: "Low Admin" as "Admin" | "Low Admin"
   });
   const [loading, setLoading] = useState(false);
   
@@ -120,15 +120,15 @@ export default function Signup() {
               <Label htmlFor="role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: "admin" | "agent") => handleInputChange("role", value)}
+                onValueChange={(value: "Admin" | "Low Admin") => handleInputChange("role", value)}
                 disabled={loading}
               >
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="agent">Agent</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="Low Admin">Low Admin</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

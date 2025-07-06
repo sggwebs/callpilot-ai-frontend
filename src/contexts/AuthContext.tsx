@@ -13,7 +13,7 @@ interface UserProfile {
   uid: string;
   email: string;
   fullName: string;
-  role: 'admin' | 'agent';
+  role: 'Admin' | 'Low Admin';
   createdAt: Date;
 }
 
@@ -22,7 +22,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role?: 'admin' | 'agent') => Promise<void>;
+  register: (email: string, password: string, fullName: string, role?: 'Admin' | 'Low Admin') => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const register = async (email: string, password: string, fullName: string, role: 'admin' | 'agent' = 'agent') => {
+  const register = async (email: string, password: string, fullName: string, role: 'Admin' | 'Low Admin' = 'Low Admin') => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const newUser = userCredential.user;
     

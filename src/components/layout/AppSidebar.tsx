@@ -17,37 +17,37 @@ const navigationItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: "📊",
-    roles: ["admin", "agent"]
+    roles: ["Admin", "Low Admin"]
   },
   {
     title: "Call Logs",
     url: "/call-logs",
     icon: "📞",
-    roles: ["admin", "agent"]
+    roles: ["Admin", "Low Admin"]
   },
   {
     title: "Leads",
     url: "/leads",
     icon: "👥",
-    roles: ["admin", "agent"]
+    roles: ["Admin", "Low Admin"]
   },
   {
     title: "AI Agents",
     url: "/ai-agents",
     icon: "🤖",
-    roles: ["admin"]
+    roles: ["Admin"]
   },
   {
     title: "Campaigns",
     url: "/campaigns",
     icon: "🎯",
-    roles: ["admin"]
+    roles: ["Admin"]
   },
   {
     title: "Settings",
     url: "/settings",
     icon: "⚙️",
-    roles: ["admin", "agent"]
+    roles: ["Admin"]
   }
 ];
 
