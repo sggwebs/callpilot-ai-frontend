@@ -1,9 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
+
+  const handleStartNewCampaign = () => {
+    navigate('/campaigns');
+  };
 
   const stats = [
     {
@@ -55,7 +61,7 @@ export default function Dashboard() {
             Here's what's happening with your call operations today.
           </p>
         </div>
-        <Button variant="business" size="lg">
+        <Button variant="business" size="lg" onClick={handleStartNewCampaign}>
           Start New Campaign
         </Button>
       </div>

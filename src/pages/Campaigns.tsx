@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
+import { CreateCampaignModal } from "@/components/campaigns/CreateCampaignModal";
 
 const mockCampaigns = [
   {
@@ -57,6 +58,7 @@ const mockCampaigns = [
 export default function Campaigns() {
   const { userProfile } = useAuth();
   const [selectedCampaign, setSelectedCampaign] = useState(mockCampaigns[0]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Check if user has Admin role
   if (userProfile?.role !== 'Admin') {
@@ -107,7 +109,7 @@ export default function Campaigns() {
             Create and manage your marketing campaigns
           </p>
         </div>
-        <Button variant="business">
+        <Button variant="business" onClick={() => setShowCreateModal(true)}>
           ➕ Create Campaign
         </Button>
       </div>
@@ -323,6 +325,11 @@ export default function Campaigns() {
           </CardContent>
         </Card>
       </div>
+
+      <CreateCampaignModal 
+        open={showCreateModal} 
+        onOpenChange={setShowCreateModal} 
+      />
     </div>
   );
 }
