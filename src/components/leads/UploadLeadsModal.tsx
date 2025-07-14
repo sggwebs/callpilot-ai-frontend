@@ -214,31 +214,26 @@ export function UploadLeadsModal({ isOpen, onClose, onSuccess }: UploadLeadsModa
 
       setUploadProgress(40);
 
-      // Step 2: Upload file to Supabase storage
-      const fileName = `${userProfile.id}/${Date.now()}_${selectedFile.name}`;
+      // Step 2: Store file in storage bucket for AI agents
+      const fileName = `${Date.now()}_${selectedFile.name}`;
+      const filePath = `${userProfile.id}/leads/${fileName}`;
+      
       const { error: uploadError } = await supabase.storage
         .from('user-settings')
-        .upload(fileName, selectedFile);
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        // Continue without storage upload - it's not critical
+        throw new Error(`Storage error: ${uploadError.message}`);
       }
-
-      setUploadProgress(60);
-
-      // Step 3: Insert leads into database
-      const { error: insertError } = await supabase
-        .from('leads')
-        .insert(leadsData);
-
-      if (insertError) throw insertError;
 
       setUploadProgress(100);
 
       toast({
         title: "Success!",
-        description: `Successfully imported ${leadsData.length} leads`,
+        description: `Successfully uploaded lead list with ${leadsData.length} leads for AI agents`,
       });
 
       setSelectedFile(null);
