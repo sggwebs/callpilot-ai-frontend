@@ -141,6 +141,62 @@ export type Database = {
           },
         ]
       }
+      call_logs: {
+        Row: {
+          agent_id: string
+          ai_sentiment: string | null
+          ai_summary: string | null
+          call_status: string
+          call_type: string
+          created_at: string
+          duration: number | null
+          id: string
+          lead_id: string
+          notes: string | null
+          recording_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          call_status: string
+          call_type: string
+          created_at?: string
+          duration?: number | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          recording_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          call_status?: string
+          call_type?: string
+          created_at?: string
+          duration?: number | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          recording_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       economic_calendar: {
         Row: {
           actual: number | null
@@ -180,6 +236,138 @@ export type Database = {
           impact?: string | null
           previous?: number | null
           title?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string
+          template_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject: string
+          template_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string
+          template_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          ai_insights: Json | null
+          assigned_agent_id: string | null
+          best_call_time: string | null
+          call_history: Json | null
+          call_outcome: string | null
+          campaign_id: string | null
+          company: string | null
+          conversion_probability: number | null
+          created_at: string
+          email: string | null
+          email_history: Json | null
+          estimated_value: number | null
+          id: string
+          interaction_count: number | null
+          last_contact_date: string | null
+          last_interaction_type: string | null
+          lead_score: number | null
+          name: string
+          next_follow_up_date: string | null
+          notes: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          priority: number | null
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_insights?: Json | null
+          assigned_agent_id?: string | null
+          best_call_time?: string | null
+          call_history?: Json | null
+          call_outcome?: string | null
+          campaign_id?: string | null
+          company?: string | null
+          conversion_probability?: number | null
+          created_at?: string
+          email?: string | null
+          email_history?: Json | null
+          estimated_value?: number | null
+          id?: string
+          interaction_count?: number | null
+          last_contact_date?: string | null
+          last_interaction_type?: string | null
+          lead_score?: number | null
+          name: string
+          next_follow_up_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: number | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_insights?: Json | null
+          assigned_agent_id?: string | null
+          best_call_time?: string | null
+          call_history?: Json | null
+          call_outcome?: string | null
+          campaign_id?: string | null
+          company?: string | null
+          conversion_probability?: number | null
+          created_at?: string
+          email?: string | null
+          email_history?: Json | null
+          estimated_value?: number | null
+          id?: string
+          interaction_count?: number | null
+          last_contact_date?: string | null
+          last_interaction_type?: string | null
+          lead_score?: number | null
+          name?: string
+          next_follow_up_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: number | null
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
