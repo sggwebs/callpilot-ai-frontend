@@ -31,11 +31,14 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate("/dashboard");
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
+      // Wait a bit for auth state to settle before navigating
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Login Failed",
