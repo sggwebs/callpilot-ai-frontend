@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const [sipSettings, setSipSettings] = useState({
     provider: "custom",
@@ -37,17 +39,110 @@ export default function Settings() {
     sentimentAnalysis: true
   });
 
+  // Load settings from database on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!userProfile?.id) return;
+      
+      try {
+        const { data: settings, error } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', userProfile.id);
+
+        if (error) {
+          console.error('Error loading settings:', error);
+          return;
+        }
+
+        // Apply loaded settings to state
+        settings?.forEach((setting) => {
+          if (setting.settings && typeof setting.settings === 'object') {
+            switch (setting.setting_type) {
+              case 'sip':
+                setSipSettings(prev => ({ ...prev, ...(setting.settings as any) }));
+                break;
+              case 'twilio':
+                setTwilioSettings(prev => ({ ...prev, ...(setting.settings as any) }));
+                break;
+              case 'ai':
+                setAiSettings(prev => ({ ...prev, ...(setting.settings as any) }));
+                break;
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setInitialLoad(false);
+      }
+    };
+
+    loadSettings();
+  }, [userProfile?.id]);
+
   const handleSaveSettings = async (section: string) => {
+    if (!userProfile?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let settingsData = {};
+      let settingType = '';
+
+      switch (section) {
+        case 'Profile':
+          // Profile settings are handled differently since they go to profiles table
+          const fullNameInput = document.getElementById('fullName') as HTMLInputElement;
+          if (fullNameInput?.value) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ full_name: fullNameInput.value })
+              .eq('id', userProfile.id);
+            
+            if (profileError) throw profileError;
+          }
+          break;
+        case 'SIP':
+          settingsData = sipSettings;
+          settingType = 'sip';
+          break;
+        case 'Twilio':
+          settingsData = twilioSettings;
+          settingType = 'twilio';
+          break;
+        case 'AI':
+          settingsData = aiSettings;
+          settingType = 'ai';
+          break;
+      }
+
+      if (settingType) {
+        const { error } = await supabase
+          .from('user_settings')
+          .upsert({
+            user_id: userProfile.id,
+            setting_type: settingType,
+            settings: settingsData
+          }, {
+            onConflict: 'user_id,setting_type'
+          });
+
+        if (error) throw error;
+      }
       
       toast({
         title: "Settings Saved",
         description: `${section} settings have been updated successfully.`,
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: "Error",
         description: "Failed to save settings. Please try again.",
@@ -57,6 +152,17 @@ export default function Settings() {
       setLoading(false);
     }
   };
+
+  if (initialLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
