@@ -45,6 +45,7 @@ export default function Settings() {
   const [admins, setAdmins] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminName, setNewAdminName] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
   const [newAdminRole, setNewAdminRole] = useState("Low Admin");
   const [adminLoading, setAdminLoading] = useState(false);
 
@@ -115,10 +116,19 @@ export default function Settings() {
   };
 
   const handleCreateAdmin = async () => {
-    if (!newAdminEmail || !newAdminName) {
+    if (!newAdminEmail || !newAdminName || !newAdminPassword) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newAdminPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
       return;
@@ -126,12 +136,11 @@ export default function Settings() {
 
     setAdminLoading(true);
     try {
-      // Create user through Supabase Auth
+      // Create user through Supabase Auth without auto-login
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: newAdminEmail,
-        password: 'TempPassword123!', // Temporary password
+        password: newAdminPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: newAdminName,
             role: newAdminRole,
@@ -143,12 +152,13 @@ export default function Settings() {
 
       toast({
         title: "Admin Created",
-        description: `${newAdminRole} ${newAdminName} has been created successfully. They will receive an email to set their password.`,
+        description: `${newAdminRole} ${newAdminName} has been created successfully. They can now login with their email and password.`,
       });
 
       // Reset form
       setNewAdminEmail("");
       setNewAdminName("");
+      setNewAdminPassword("");
       setNewAdminRole("Low Admin");
 
       // Reload admins
@@ -678,7 +688,7 @@ export default function Settings() {
                 <Plus className="h-4 w-4" />
                 Create New Admin
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <Label htmlFor="newAdminName">Full Name</Label>
                   <Input
@@ -701,6 +711,17 @@ export default function Settings() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="newAdminPassword">Password</Label>
+                  <Input
+                    id="newAdminPassword"
+                    type="password"
+                    value={newAdminPassword}
+                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                    placeholder="Enter password (min 6 chars)"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="newAdminRole">Role</Label>
                   <Select value={newAdminRole} onValueChange={setNewAdminRole}>
                     <SelectTrigger className="mt-1">
@@ -715,7 +736,7 @@ export default function Settings() {
               </div>
               <Button
                 onClick={handleCreateAdmin}
-                disabled={adminLoading || !newAdminEmail || !newAdminName}
+                disabled={adminLoading || !newAdminEmail || !newAdminName || !newAdminPassword}
                 className="mt-4 w-full md:w-auto"
               >
                 {adminLoading ? "Creating..." : "Create Admin"}
