@@ -22,6 +22,7 @@ import { BulkActionsModal } from "@/components/leads/BulkActionsModal";
 import { EmailModal } from "@/components/leads/EmailModal";
 import { CallModal } from "@/components/leads/CallModal";
 import { EditLeadModal } from "@/components/leads/EditLeadModal";
+import { UploadLeadsModal } from "@/components/leads/UploadLeadsModal";
 
 interface Lead {
   id: string;
@@ -54,6 +55,7 @@ export default function Leads() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
@@ -98,68 +100,7 @@ export default function Leads() {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !userProfile) return;
-
-    if (file.type !== 'text/csv') {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload a CSV file",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    toast({
-      title: "File Uploaded",
-      description: `Processing ${file.name}...`,
-    });
-    
-    try {
-      const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      
-      const leadsToInsert = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        if (values.length >= 2) {
-          const leadData: any = {
-            user_id: userProfile.id,
-            name: values[headers.indexOf('name')] || values[0],
-            email: values[headers.indexOf('email')] || values[1],
-            phone: values[headers.indexOf('phone')] || values[2],
-            company: values[headers.indexOf('company')] || values[3],
-            source: 'csv_import',
-            status: 'new',
-            created_at: new Date().toISOString()
-          };
-          leadsToInsert.push(leadData);
-        }
-      }
-
-      const { error } = await supabase
-        .from('leads')
-        .insert(leadsToInsert);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Imported ${leadsToInsert.length} leads successfully`,
-      });
-      
-      loadLeads();
-    } catch (error) {
-      console.error('Error importing leads:', error);
-      toast({
-        title: "Import Error",
-        description: "Failed to import leads. Please check the CSV format.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Legacy function kept for reference - now using UploadLeadsModal
 
   const downloadTemplate = () => {
     const csvContent = "name,email,phone,company,source,notes\nJohn Doe,john@example.com,+1234567890,Example Corp,Website,Sample lead";
@@ -229,18 +170,9 @@ export default function Leads() {
           </p>
         </div>
         <div className="flex gap-3">
-          <label htmlFor="csv-upload">
-            <Button variant="outline" className="cursor-pointer">
-              📤 Upload CSV
-            </Button>
-            <input
-              id="csv-upload"
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </label>
+          <Button variant="outline" onClick={() => setShowUploadModal(true)}>
+            📤 Upload File
+          </Button>
           <Button variant="business" onClick={() => setShowAddModal(true)}>
             ➕ Add Lead
           </Button>
@@ -329,38 +261,37 @@ export default function Leads() {
         </CardContent>
       </Card>
 
-      {/* CSV Upload Instructions */}
+      {/* File Upload Instructions */}
       <Card className="shadow-business-sm border-border/50 bg-primary/5 border-primary/20">
         <CardHeader>
-          <CardTitle className="text-primary">📋 CSV Upload Guidelines</CardTitle>
+          <CardTitle className="text-primary">📋 File Upload Guidelines</CardTitle>
           <CardDescription>
-            Upload leads efficiently using our CSV template
+            Upload leads efficiently using CSV or Excel files
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Required columns:</p>
+              <p className="text-sm text-muted-foreground mb-2">Supported formats:</p>
               <ul className="text-sm space-y-1 text-foreground">
-                <li>• Name</li>
-                <li>• Email</li>
-                <li>• Phone</li>
-                <li>• Company (optional)</li>
+                <li>• CSV files (.csv)</li>
+                <li>• Excel files (.xlsx, .xls)</li>
+                <li>• Maximum file size: 10MB</li>
               </ul>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Optional columns:</p>
+              <p className="text-sm text-muted-foreground mb-2">Required columns:</p>
               <ul className="text-sm space-y-1 text-foreground">
-                <li>• Source</li>
-                <li>• Notes</li>
-                <li>• Status</li>
-                <li>• Assigned Agent</li>
+                <li>• Name (required)</li>
+                <li>• Email (recommended)</li>
+                <li>• Phone (recommended)</li>
+                <li>• Company (optional)</li>
               </ul>
             </div>
           </div>
           <div className="mt-4">
-            <Button variant="outline" size="sm" onClick={downloadTemplate}>
-              📥 Download Template
+            <Button variant="outline" size="sm" onClick={() => setShowUploadModal(true)}>
+              📤 Upload File
             </Button>
           </div>
         </CardContent>
@@ -532,6 +463,12 @@ export default function Leads() {
         onOpenChange={setShowEditModal}
         lead={selectedLead}
         onLeadUpdated={loadLeads}
+      />
+      
+      <UploadLeadsModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onSuccess={loadLeads}
       />
     </div>
   );
