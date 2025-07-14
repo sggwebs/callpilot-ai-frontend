@@ -49,7 +49,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const newUser = userCredential.user;
     
-    // Create user profile in Firestore
+    // Wait for the auth state to be established
+    await new Promise<void>((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user && user.uid === newUser.uid) {
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+    
+    // Create user profile in Firestore after auth state is established
     const profileData: UserProfile = {
       uid: newUser.uid,
       email,
