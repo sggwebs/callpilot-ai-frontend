@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Plus, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +41,14 @@ export default function Settings() {
     sentimentAnalysis: true
   });
 
-  // Load settings from database on component mount
+  // Admin Management State
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminName, setNewAdminName] = useState("");
+  const [newAdminRole, setNewAdminRole] = useState("Low Admin");
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  // Load settings and admins from database on component mount
   useEffect(() => {
     const loadSettings = async () => {
       if (!userProfile?.id) return;
@@ -71,6 +80,11 @@ export default function Settings() {
             }
           }
         });
+
+        // Load admins if user is Admin
+        if (userProfile?.role === 'Admin') {
+          await loadAdmins();
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
       } finally {
@@ -79,7 +93,139 @@ export default function Settings() {
     };
 
     loadSettings();
-  }, [userProfile?.id]);
+  }, [userProfile?.id, userProfile?.role]);
+
+  const loadAdmins = async () => {
+    try {
+      const { data: adminData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('role', ['Admin', 'Low Admin'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading admins:', error);
+        return;
+      }
+
+      setAdmins(adminData || []);
+    } catch (error) {
+      console.error('Error loading admins:', error);
+    }
+  };
+
+  const handleCreateAdmin = async () => {
+    if (!newAdminEmail || !newAdminName) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAdminLoading(true);
+    try {
+      // Create user through Supabase Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: newAdminEmail,
+        password: 'TempPassword123!', // Temporary password
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: newAdminName,
+            role: newAdminRole,
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      toast({
+        title: "Admin Created",
+        description: `${newAdminRole} ${newAdminName} has been created successfully. They will receive an email to set their password.`,
+      });
+
+      // Reset form
+      setNewAdminEmail("");
+      setNewAdminName("");
+      setNewAdminRole("Low Admin");
+
+      // Reload admins
+      await loadAdmins();
+    } catch (error: any) {
+      console.error('Error creating admin:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create admin. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (adminId: string, adminName: string) => {
+    if (!confirm(`Are you sure you want to delete ${adminName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setAdminLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', adminId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin Deleted",
+        description: `${adminName} has been deleted successfully.`,
+      });
+
+      // Reload admins
+      await loadAdmins();
+    } catch (error: any) {
+      console.error('Error deleting admin:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete admin. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleUpdateAdminRole = async (adminId: string, newRole: string, adminName: string) => {
+    setAdminLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', adminId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Role Updated",
+        description: `${adminName}'s role has been updated to ${newRole}.`,
+      });
+
+      // Reload admins
+      await loadAdmins();
+    } catch (error: any) {
+      console.error('Error updating admin role:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update admin role. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
 
   const handleSaveSettings = async (section: string) => {
     if (!userProfile?.id) {
@@ -517,6 +663,142 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Management - Only visible to Admin users */}
+      {userProfile?.role === 'Admin' && (
+        <Card className="shadow-business-sm border-border/50">
+          <CardHeader>
+            <CardTitle>👑 Admin Management</CardTitle>
+            <CardDescription>Create and manage Low Admins and Sub Admins</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Create New Admin Form */}
+            <div className="border border-border/50 rounded-lg p-4 bg-muted/20">
+              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create New Admin
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="newAdminName">Full Name</Label>
+                  <Input
+                    id="newAdminName"
+                    value={newAdminName}
+                    onChange={(e) => setNewAdminName(e.target.value)}
+                    placeholder="Enter full name"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newAdminEmail">Email Address</Label>
+                  <Input
+                    id="newAdminEmail"
+                    type="email"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newAdminRole">Role</Label>
+                  <Select value={newAdminRole} onValueChange={setNewAdminRole}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Low Admin">Low Admin</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                onClick={handleCreateAdmin}
+                disabled={adminLoading || !newAdminEmail || !newAdminName}
+                className="mt-4 w-full md:w-auto"
+              >
+                {adminLoading ? "Creating..." : "Create Admin"}
+              </Button>
+            </div>
+
+            {/* Existing Admins List */}
+            <div>
+              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <UserCheck className="h-4 w-4" />
+                Current Admins ({admins.length})
+              </h4>
+              
+              {admins.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <UserCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No additional admins created yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {admins.map((admin) => (
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-card"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <h5 className="font-medium text-foreground">
+                              {admin.full_name || 'Unnamed Admin'}
+                            </h5>
+                            <p className="text-sm text-muted-foreground">{admin.email}</p>
+                          </div>
+                          <Badge 
+                            variant={admin.role === 'Admin' ? 'default' : 'secondary'}
+                            className="ml-2"
+                          >
+                            {admin.role}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {admin.id !== userProfile?.id && (
+                          <>
+                            <Select
+                              value={admin.role}
+                              onValueChange={(newRole) => handleUpdateAdminRole(admin.id, newRole, admin.full_name || admin.email)}
+                              disabled={adminLoading}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Low Admin">Low Admin</SelectItem>
+                                <SelectItem value="Admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Button
+                              onClick={() => handleDeleteAdmin(admin.id, admin.full_name || admin.email)}
+                              disabled={adminLoading}
+                              variant="destructive"
+                              size="sm"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {admin.id === userProfile?.id && (
+                          <Badge variant="outline" className="text-xs">
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
