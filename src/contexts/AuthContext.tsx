@@ -1,28 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  User, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/config/firebase';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
-  uid: string;
+  id: string;
   email: string;
-  fullName: string;
-  role: 'Admin' | 'Low Admin';
-  createdAt: Date;
+  full_name: string | null;
+  role: string;
+  created_at: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
+  session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, role?: 'Admin' | 'Low Admin') => Promise<void>;
+  register: (email: string, password: string, fullName: string, role?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -39,65 +33,95 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
   };
 
-  const register = async (email: string, password: string, fullName: string, role: 'Admin' | 'Low Admin' = 'Low Admin') => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const newUser = userCredential.user;
+  const register = async (email: string, password: string, fullName: string, role: string = 'user') => {
+    const redirectUrl = `${window.location.origin}/`;
     
-    // Wait for the auth state to be established
-    await new Promise<void>((resolve) => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user && user.uid === newUser.uid) {
-          unsubscribe();
-          resolve();
-        }
-      });
-    });
-    
-    // Create user profile in Firestore after auth state is established
-    const profileData: UserProfile = {
-      uid: newUser.uid,
+    const { error } = await supabase.auth.signUp({
       email,
-      fullName,
-      role,
-      createdAt: new Date()
-    };
-    
-    await setDoc(doc(db, 'users', newUser.uid), profileData);
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          role: role,
+        }
+      }
+    });
+    if (error) throw error;
   };
 
   const logout = async () => {
-    await signOut(auth);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      
-      if (user) {
-        // Fetch user profile from Firestore
-        const profileDoc = await getDoc(doc(db, 'users', user.uid));
-        if (profileDoc.exists()) {
-          setUserProfile(profileDoc.data() as UserProfile);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer profile fetching to avoid blocking auth state updates
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUserProfile(null);
         }
-      } else {
-        setUserProfile(null);
+        
+        setLoading(false);
       }
-      
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+      
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const value = {
     user,
     userProfile,
+    session,
     loading,
     login,
     register,

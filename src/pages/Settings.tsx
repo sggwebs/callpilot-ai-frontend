@@ -79,7 +79,7 @@ export default function Settings() {
               <Label htmlFor="fullName">Full Name</Label>
               <Input
                 id="fullName"
-                defaultValue={userProfile?.fullName}
+                defaultValue={userProfile?.full_name || ''}
                 className="mt-1"
               />
             </div>

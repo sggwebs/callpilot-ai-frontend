@@ -49,7 +49,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, {userProfile?.fullName.split(' ')[0]}! 👋
+            Welcome back, {userProfile?.full_name?.split(' ')[0] || 'User'}! 👋
           </h1>
           <p className="text-muted-foreground mt-2">
             Here's what's happening with your call operations today.
@@ -120,10 +120,10 @@ export default function Dashboard() {
             <div className="text-center">
               <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center mx-auto mb-3">
                 <span className="text-xl font-bold text-primary-foreground">
-                  {userProfile?.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  {userProfile?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
                 </span>
               </div>
-              <h3 className="font-semibold text-foreground">{userProfile?.fullName}</h3>
+              <h3 className="font-semibold text-foreground">{userProfile?.full_name}</h3>
               <p className="text-sm text-muted-foreground">{userProfile?.email}</p>
               <div className="mt-2">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary capitalize">
