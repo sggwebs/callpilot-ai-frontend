@@ -79,6 +79,34 @@ export function UploadLeadsModal({ isOpen, onClose, onSuccess }: UploadLeadsModa
     setSelectedFile(file);
   };
 
+  const formatPhoneToInternational = (phone: string): string => {
+    if (!phone) return '';
+    
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // If already starts with +, return as is
+    if (phone.startsWith('+')) return phone;
+    
+    // If starts with 1 and has 11 digits, assume US/Canada
+    if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
+      return `+${digitsOnly}`;
+    }
+    
+    // If 10 digits, assume US without country code
+    if (digitsOnly.length === 10) {
+      return `+1${digitsOnly}`;
+    }
+    
+    // If more than 11 digits, assume it already has country code
+    if (digitsOnly.length > 11) {
+      return `+${digitsOnly}`;
+    }
+    
+    // For other cases, just add + if not present
+    return digitsOnly ? `+${digitsOnly}` : '';
+  };
+
   const parseCSV = async (text: string): Promise<any[]> => {
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length < 2) throw new Error('CSV must have at least a header and one data row');
@@ -88,16 +116,16 @@ export function UploadLeadsModal({ isOpen, onClose, onSuccess }: UploadLeadsModa
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-      if (values.length >= 2 && values.some(v => v.length > 0)) {
+      if (values.length >= 1 && values[0] && values[0].trim()) { // Only require name
         const leadData: any = {
           user_id: userProfile?.id,
           name: values[headers.indexOf('name')] || values[0] || 'Unknown',
-          email: values[headers.indexOf('email')] || values[1] || '',
-          phone: values[headers.indexOf('phone')] || values[2] || '',
-          company: values[headers.indexOf('company')] || values[3] || '',
+          email: values[headers.indexOf('email')] || values[1] || null,
+          phone: formatPhoneToInternational(values[headers.indexOf('phone')] || values[2] || ''),
+          company: values[headers.indexOf('company')] || values[3] || null,
           source: values[headers.indexOf('source')] || 'csv_import',
           status: values[headers.indexOf('status')] || 'new',
-          notes: values[headers.indexOf('notes')] || '',
+          notes: values[headers.indexOf('notes')] || null,
           priority: parseInt(values[headers.indexOf('priority')]) || 1,
           lead_score: parseInt(values[headers.indexOf('lead_score')]) || 0,
           created_at: new Date().toISOString()
@@ -129,16 +157,21 @@ export function UploadLeadsModal({ isOpen, onClose, onSuccess }: UploadLeadsModa
 
           for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
-            if (row && row.length >= 2 && row.some(v => v !== undefined && v !== null && String(v).trim().length > 0)) {
+            if (row && row.length >= 1 && row[0] !== undefined && row[0] !== null && String(row[0]).trim().length > 0) {
+              const emailValue = String(row[headers.indexOf('email')] || row[1] || '').trim();
+              const phoneValue = String(row[headers.indexOf('phone')] || row[2] || '').trim();
+              const companyValue = String(row[headers.indexOf('company')] || row[3] || '').trim();
+              const notesValue = String(row[headers.indexOf('notes')] || '').trim();
+              
               const leadData: any = {
                 user_id: userProfile?.id,
                 name: String(row[headers.indexOf('name')] || row[0] || 'Unknown').trim(),
-                email: String(row[headers.indexOf('email')] || row[1] || '').trim(),
-                phone: String(row[headers.indexOf('phone')] || row[2] || '').trim(),
-                company: String(row[headers.indexOf('company')] || row[3] || '').trim(),
+                email: emailValue || null,
+                phone: formatPhoneToInternational(phoneValue),
+                company: companyValue || null,
                 source: String(row[headers.indexOf('source')] || 'excel_import').trim(),
                 status: String(row[headers.indexOf('status')] || 'new').trim(),
-                notes: String(row[headers.indexOf('notes')] || '').trim(),
+                notes: notesValue || null,
                 priority: parseInt(String(row[headers.indexOf('priority')] || '1')) || 1,
                 lead_score: parseInt(String(row[headers.indexOf('lead_score')] || '0')) || 0,
                 created_at: new Date().toISOString()

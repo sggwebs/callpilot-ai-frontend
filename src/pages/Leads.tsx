@@ -146,6 +146,36 @@ export default function Leads() {
     setShowEditModal(true);
   };
 
+  const handleDelete = async (lead: Lead) => {
+    if (!window.confirm(`Are you sure you want to delete "${lead.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', lead.id)
+        .eq('user_id', userProfile?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Lead Deleted",
+        description: `Successfully deleted ${lead.name}`,
+      });
+
+      loadLeads();
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete lead",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -407,15 +437,24 @@ export default function Leads() {
                           >
                             📧
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEdit(lead)}
-                            title="Edit lead"
-                          >
-                            ✏️
-                          </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="sm" 
+                             className="h-8 w-8 p-0"
+                             onClick={() => handleEdit(lead)}
+                             title="Edit lead"
+                           >
+                             ✏️
+                           </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="sm" 
+                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                             onClick={() => handleDelete(lead)}
+                             title="Delete lead"
+                           >
+                             🗑️
+                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
