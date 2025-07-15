@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, UserCheck } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trash2, Plus, UserCheck, User, Phone, Brain, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -329,497 +330,541 @@ export default function Settings() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Profile Settings */}
-        <Card className="shadow-business-sm border-border/50">
-          <CardHeader>
-            <CardTitle>👤 Profile Settings</CardTitle>
-            <CardDescription>Manage your account information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                defaultValue={userProfile?.full_name || ''}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                defaultValue={userProfile?.email}
-                className="mt-1"
-                disabled
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Email cannot be changed. Contact support for assistance.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Input
-                id="role"
-                defaultValue={userProfile?.role}
-                className="mt-1 capitalize"
-                disabled
-              />
-            </div>
-            <Button 
-              onClick={() => handleSaveSettings("Profile")}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Saving..." : "Save Profile"}
-            </Button>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1">
+          <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="sip" className="flex items-center gap-2 py-3">
+            <Phone className="h-4 w-4" />
+            <span className="hidden sm:inline">SIP Config</span>
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="flex items-center gap-2 py-3">
+            <Brain className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Config</span>
+          </TabsTrigger>
+          {userProfile?.role === 'Admin' && (
+            <TabsTrigger value="admin" className="flex items-center gap-2 py-3">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Admin</span>
+            </TabsTrigger>
+          )}
+        </TabsList>
 
-        {/* SIP Configuration */}
-        <Card className="shadow-business-sm border-border/50">
-          <CardHeader>
-            <CardTitle>📞 SIP Configuration</CardTitle>
-            <CardDescription>Configure your SIP trunk settings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="sipProvider">SIP Provider</Label>
-              <Select 
-                value={sipSettings.provider} 
-                onValueChange={(value) => setSipSettings(prev => ({ ...prev, provider: value }))}
+        {/* Profile Settings Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          <Card className="shadow-business-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Profile Settings
+              </CardTitle>
+              <CardDescription>Manage your account information and preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  defaultValue={userProfile?.full_name || ''}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  defaultValue={userProfile?.email}
+                  className="mt-1"
+                  disabled
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Email cannot be changed. Contact support for assistance.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  defaultValue={userProfile?.role}
+                  className="mt-1 capitalize"
+                  disabled
+                />
+              </div>
+              <Button 
+                onClick={() => handleSaveSettings("Profile")}
+                disabled={loading}
+                className="w-full"
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">Custom SIP Server</SelectItem>
-                  <SelectItem value="twilio">Twilio SIP</SelectItem>
-                  <SelectItem value="asterisk">Asterisk</SelectItem>
-                  <SelectItem value="freeswitch">FreeSWITCH</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="sipServer">SIP Server</Label>
-              <Input
-                id="sipServer"
-                value={sipSettings.server}
-                onChange={(e) => setSipSettings(prev => ({ ...prev, server: e.target.value }))}
-                className="mt-1"
-                placeholder="sip.example.com"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="sipUsername">Username</Label>
-                <Input
-                  id="sipUsername"
-                  value={sipSettings.username}
-                  onChange={(e) => setSipSettings(prev => ({ ...prev, username: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="sipPort">Port</Label>
-                <Input
-                  id="sipPort"
-                  value={sipSettings.port}
-                  onChange={(e) => setSipSettings(prev => ({ ...prev, port: e.target.value }))}
-                  className="mt-1"
-                  placeholder="5060"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="sipPassword">Password</Label>
-              <Input
-                id="sipPassword"
-                type="password"
-                value={sipSettings.password}
-                onChange={(e) => setSipSettings(prev => ({ ...prev, password: e.target.value }))}
-                className="mt-1"
-                placeholder="Enter SIP password"
-              />
-            </div>
-            <Button 
-              onClick={() => handleSaveSettings("SIP")}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Saving..." : "Save SIP Settings"}
-            </Button>
-          </CardContent>
-        </Card>
+                {loading ? "Saving..." : "Save Profile"}
+              </Button>
+            </CardContent>
+          </Card>
 
-        {/* Twilio Configuration */}
-        <Card className="shadow-business-sm border-border/50">
-          <CardHeader>
-            <CardTitle>🌟 Twilio Configuration</CardTitle>
-            <CardDescription>Configure Twilio API credentials</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="twilioSid">Account SID</Label>
-              <Input
-                id="twilioSid"
-                value={twilioSettings.accountSid}
-                onChange={(e) => setTwilioSettings(prev => ({ ...prev, accountSid: e.target.value }))}
-                className="mt-1"
-                placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              />
-            </div>
-            <div>
-              <Label htmlFor="twilioToken">Auth Token</Label>
-              <Input
-                id="twilioToken"
-                type="password"
-                value={twilioSettings.authToken}
-                onChange={(e) => setTwilioSettings(prev => ({ ...prev, authToken: e.target.value }))}
-                className="mt-1"
-                placeholder="Enter Twilio Auth Token"
-              />
-            </div>
-            <div>
-              <Label htmlFor="twilioPhone">Phone Number</Label>
-              <Input
-                id="twilioPhone"
-                value={twilioSettings.phoneNumber}
-                onChange={(e) => setTwilioSettings(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                className="mt-1"
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-            <Button 
-              onClick={() => handleSaveSettings("Twilio")}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Saving..." : "Save Twilio Settings"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* AI Configuration */}
-        <Card className="shadow-business-sm border-border/50">
-          <CardHeader>
-            <CardTitle>🧠 AI Configuration</CardTitle>
-            <CardDescription>Configure AI voice and behavior settings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="defaultVoice">Default Voice</Label>
-                <Select 
-                  value={aiSettings.defaultVoice} 
-                  onValueChange={(value) => setAiSettings(prev => ({ ...prev, defaultVoice: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="professional-female">Professional Female</SelectItem>
-                    <SelectItem value="professional-male">Professional Male</SelectItem>
-                    <SelectItem value="friendly-female">Friendly Female</SelectItem>
-                    <SelectItem value="friendly-male">Friendly Male</SelectItem>
-                    <SelectItem value="energetic-female">Energetic Female</SelectItem>
-                    <SelectItem value="calm-male">Calm Male</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="language">Language</Label>
-                <Select 
-                  value={aiSettings.language} 
-                  onValueChange={(value) => setAiSettings(prev => ({ ...prev, language: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en-US">English (US)</SelectItem>
-                    <SelectItem value="en-GB">English (UK)</SelectItem>
-                    <SelectItem value="es-ES">Spanish (Spain)</SelectItem>
-                    <SelectItem value="fr-FR">French (France)</SelectItem>
-                    <SelectItem value="de-DE">German (Germany)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="responseSpeed">Response Speed</Label>
-                <Select 
-                  value={aiSettings.responseSpeed} 
-                  onValueChange={(value) => setAiSettings(prev => ({ ...prev, responseSpeed: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fast">Fast</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="slow">Slow & Clear</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="fallbackBehavior">Fallback Behavior</Label>
-                <Select 
-                  value={aiSettings.fallbackBehavior} 
-                  onValueChange={(value) => setAiSettings(prev => ({ ...prev, fallbackBehavior: value }))}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="transfer-to-human">Transfer to Human</SelectItem>
-                    <SelectItem value="schedule-callback">Schedule Callback</SelectItem>
-                    <SelectItem value="take-message">Take Message</SelectItem>
-                    <SelectItem value="end-call">End Call Politely</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+          {/* System Information */}
+          <Card className="shadow-business-sm border-border/50">
+            <CardHeader>
+              <CardTitle>System Information</CardTitle>
+              <CardDescription>CallPilotAI system details and status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <Label htmlFor="enableRecording">Call Recording</Label>
-                  <p className="text-sm text-muted-foreground">Enable automatic call recording</p>
+                  <h4 className="font-semibold text-foreground mb-2">Version Information</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">CallPilotAI</span>
+                      <span className="font-medium">v2.1.4</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last Updated</span>
+                      <span className="font-medium">Jan 15, 2024</span>
+                    </div>
+                  </div>
                 </div>
-                <Switch
-                  id="enableRecording"
-                  checked={aiSettings.enableRecording}
-                  onCheckedChange={(checked) => setAiSettings(prev => ({ ...prev, enableRecording: checked }))}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
+                
                 <div>
-                  <Label htmlFor="sentimentAnalysis">Sentiment Analysis</Label>
-                  <p className="text-sm text-muted-foreground">Analyze caller sentiment in real-time</p>
+                  <h4 className="font-semibold text-foreground mb-2">System Status</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">API Status</span>
+                      <span className="font-medium text-success">🟢 Online</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Database</span>
+                      <span className="font-medium text-success">🟢 Connected</span>
+                    </div>
+                  </div>
                 </div>
-                <Switch
-                  id="sentimentAnalysis"
-                  checked={aiSettings.sentimentAnalysis}
-                  onCheckedChange={(checked) => setAiSettings(prev => ({ ...prev, sentimentAnalysis: checked }))}
-                />
-              </div>
-            </div>
 
-            <Button 
-              onClick={() => handleSaveSettings("AI")}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Saving..." : "Save AI Settings"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* System Information */}
-      <Card className="shadow-business-sm border-border/50">
-        <CardHeader>
-          <CardTitle>ℹ️ System Information</CardTitle>
-          <CardDescription>CallPilotAI system details and status</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Version Information</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">CallPilotAI</span>
-                  <span className="font-medium">v2.1.4</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Last Updated</span>
-                  <span className="font-medium">Jan 15, 2024</span>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Usage Statistics</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Calls This Month</span>
+                      <span className="font-medium">1,247</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Storage Used</span>
+                      <span className="font-medium">2.4 GB</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">System Status</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">API Status</span>
-                  <span className="font-medium text-success">🟢 Online</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Database</span>
-                  <span className="font-medium text-success">🟢 Connected</span>
-                </div>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div>
-              <h4 className="font-semibold text-foreground mb-2">Usage Statistics</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Calls This Month</span>
-                  <span className="font-medium">1,247</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Storage Used</span>
-                  <span className="font-medium">2.4 GB</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Admin Management - Only visible to Admin users */}
-      {userProfile?.role === 'Admin' && (
-        <Card className="shadow-business-sm border-border/50">
-          <CardHeader>
-            <CardTitle>👑 Admin Management</CardTitle>
-            <CardDescription>Create and manage Low Admins and Sub Admins</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Create New Admin Form */}
-            <div className="border border-border/50 rounded-lg p-4 bg-muted/20">
-              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Create New Admin
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* SIP Configuration Tab */}
+        <TabsContent value="sip" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* SIP Configuration */}
+            <Card className="shadow-business-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  SIP Configuration
+                </CardTitle>
+                <CardDescription>Configure your SIP trunk settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="newAdminName">Full Name</Label>
-                  <Input
-                    id="newAdminName"
-                    value={newAdminName}
-                    onChange={(e) => setNewAdminName(e.target.value)}
-                    placeholder="Enter full name"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newAdminEmail">Email Address</Label>
-                  <Input
-                    id="newAdminEmail"
-                    type="email"
-                    value={newAdminEmail}
-                    onChange={(e) => setNewAdminEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newAdminPassword">Password</Label>
-                  <Input
-                    id="newAdminPassword"
-                    type="password"
-                    value={newAdminPassword}
-                    onChange={(e) => setNewAdminPassword(e.target.value)}
-                    placeholder="Enter password (min 6 chars)"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newAdminRole">Role</Label>
-                  <Select value={newAdminRole} onValueChange={setNewAdminRole}>
+                  <Label htmlFor="sipProvider">SIP Provider</Label>
+                  <Select 
+                    value={sipSettings.provider} 
+                    onValueChange={(value) => setSipSettings(prev => ({ ...prev, provider: value }))}
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Low Admin">Low Admin</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="custom">Custom SIP Server</SelectItem>
+                      <SelectItem value="twilio">Twilio SIP</SelectItem>
+                      <SelectItem value="asterisk">Asterisk</SelectItem>
+                      <SelectItem value="freeswitch">FreeSWITCH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="sipServer">SIP Server</Label>
+                  <Input
+                    id="sipServer"
+                    value={sipSettings.server}
+                    onChange={(e) => setSipSettings(prev => ({ ...prev, server: e.target.value }))}
+                    className="mt-1"
+                    placeholder="sip.example.com"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="sipUsername">Username</Label>
+                    <Input
+                      id="sipUsername"
+                      value={sipSettings.username}
+                      onChange={(e) => setSipSettings(prev => ({ ...prev, username: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sipPort">Port</Label>
+                    <Input
+                      id="sipPort"
+                      value={sipSettings.port}
+                      onChange={(e) => setSipSettings(prev => ({ ...prev, port: e.target.value }))}
+                      className="mt-1"
+                      placeholder="5060"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="sipPassword">Password</Label>
+                  <Input
+                    id="sipPassword"
+                    type="password"
+                    value={sipSettings.password}
+                    onChange={(e) => setSipSettings(prev => ({ ...prev, password: e.target.value }))}
+                    className="mt-1"
+                    placeholder="Enter SIP password"
+                  />
+                </div>
+                <Button 
+                  onClick={() => handleSaveSettings("SIP")}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? "Saving..." : "Save SIP Settings"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Twilio Configuration */}
+            <Card className="shadow-business-sm border-border/50">
+              <CardHeader>
+                <CardTitle>Twilio Configuration</CardTitle>
+                <CardDescription>Configure Twilio API credentials</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="twilioSid">Account SID</Label>
+                  <Input
+                    id="twilioSid"
+                    value={twilioSettings.accountSid}
+                    onChange={(e) => setTwilioSettings(prev => ({ ...prev, accountSid: e.target.value }))}
+                    className="mt-1"
+                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="twilioToken">Auth Token</Label>
+                  <Input
+                    id="twilioToken"
+                    type="password"
+                    value={twilioSettings.authToken}
+                    onChange={(e) => setTwilioSettings(prev => ({ ...prev, authToken: e.target.value }))}
+                    className="mt-1"
+                    placeholder="Enter Twilio Auth Token"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="twilioPhone">Phone Number</Label>
+                  <Input
+                    id="twilioPhone"
+                    value={twilioSettings.phoneNumber}
+                    onChange={(e) => setTwilioSettings(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                    className="mt-1"
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+                <Button 
+                  onClick={() => handleSaveSettings("Twilio")}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? "Saving..." : "Save Twilio Settings"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* AI Configuration Tab */}
+        <TabsContent value="ai" className="space-y-6">
+          <Card className="shadow-business-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                AI Configuration
+              </CardTitle>
+              <CardDescription>Configure AI voice and behavior settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="defaultVoice">Default Voice</Label>
+                  <Select 
+                    value={aiSettings.defaultVoice} 
+                    onValueChange={(value) => setAiSettings(prev => ({ ...prev, defaultVoice: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional-female">Professional Female</SelectItem>
+                      <SelectItem value="professional-male">Professional Male</SelectItem>
+                      <SelectItem value="friendly-female">Friendly Female</SelectItem>
+                      <SelectItem value="friendly-male">Friendly Male</SelectItem>
+                      <SelectItem value="energetic-female">Energetic Female</SelectItem>
+                      <SelectItem value="calm-male">Calm Male</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="language">Language</Label>
+                  <Select 
+                    value={aiSettings.language} 
+                    onValueChange={(value) => setAiSettings(prev => ({ ...prev, language: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en-US">English (US)</SelectItem>
+                      <SelectItem value="en-GB">English (UK)</SelectItem>
+                      <SelectItem value="es-ES">Spanish (Spain)</SelectItem>
+                      <SelectItem value="fr-FR">French (France)</SelectItem>
+                      <SelectItem value="de-DE">German (Germany)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <Button
-                onClick={handleCreateAdmin}
-                disabled={adminLoading || !newAdminEmail || !newAdminName || !newAdminPassword}
-                className="mt-4 w-full md:w-auto"
-              >
-                {adminLoading ? "Creating..." : "Create Admin"}
-              </Button>
-            </div>
 
-            {/* Existing Admins List */}
-            <div>
-              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <UserCheck className="h-4 w-4" />
-                Current Admins ({admins.length})
-              </h4>
-              
-              {admins.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <UserCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No additional admins created yet</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="responseSpeed">Response Speed</Label>
+                  <Select 
+                    value={aiSettings.responseSpeed} 
+                    onValueChange={(value) => setAiSettings(prev => ({ ...prev, responseSpeed: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fast">Fast</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="slow">Slow & Clear</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {admins.map((admin) => (
-                    <div
-                      key={admin.id}
-                      className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-card"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <div>
-                            <h5 className="font-medium text-foreground">
-                              {admin.full_name || 'Unnamed Admin'}
-                            </h5>
-                            <p className="text-sm text-muted-foreground">{admin.email}</p>
-                          </div>
-                          <Badge 
-                            variant={admin.role === 'Admin' ? 'default' : 'secondary'}
-                            className="ml-2"
-                          >
-                            {admin.role}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {admin.id !== userProfile?.id && (
-                          <>
-                            <Select
-                              value={admin.role}
-                              onValueChange={(newRole) => handleUpdateAdminRole(admin.id, newRole, admin.full_name || admin.email)}
-                              disabled={adminLoading}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Low Admin">Low Admin</SelectItem>
-                                <SelectItem value="Admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            <Button
-                              onClick={() => handleDeleteAdmin(admin.id, admin.full_name || admin.email)}
-                              disabled={adminLoading}
-                              variant="destructive"
-                              size="sm"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {admin.id === userProfile?.id && (
-                          <Badge variant="outline" className="text-xs">
-                            You
-                          </Badge>
-                        )}
-                      </div>
+                <div>
+                  <Label htmlFor="fallbackBehavior">Fallback Behavior</Label>
+                  <Select 
+                    value={aiSettings.fallbackBehavior} 
+                    onValueChange={(value) => setAiSettings(prev => ({ ...prev, fallbackBehavior: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="transfer-to-human">Transfer to Human</SelectItem>
+                      <SelectItem value="schedule-callback">Schedule Callback</SelectItem>
+                      <SelectItem value="take-message">Take Message</SelectItem>
+                      <SelectItem value="end-call">End Call Politely</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="enableRecording">Call Recording</Label>
+                    <p className="text-sm text-muted-foreground">Enable automatic call recording</p>
+                  </div>
+                  <Switch
+                    id="enableRecording"
+                    checked={aiSettings.enableRecording}
+                    onCheckedChange={(checked) => setAiSettings(prev => ({ ...prev, enableRecording: checked }))}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="sentimentAnalysis">Sentiment Analysis</Label>
+                    <p className="text-sm text-muted-foreground">Analyze caller sentiment in real-time</p>
+                  </div>
+                  <Switch
+                    id="sentimentAnalysis"
+                    checked={aiSettings.sentimentAnalysis}
+                    onCheckedChange={(checked) => setAiSettings(prev => ({ ...prev, sentimentAnalysis: checked }))}
+                  />
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => handleSaveSettings("AI")}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? "Saving..." : "Save AI Settings"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Admin Management Tab - Only visible to Admin users */}
+        {userProfile?.role === 'Admin' && (
+          <TabsContent value="admin" className="space-y-6">
+            <Card className="shadow-business-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Admin Management
+                </CardTitle>
+                <CardDescription>Create and manage Low Admins and Sub Admins</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Create New Admin Form */}
+                <div className="border border-border/50 rounded-lg p-4 bg-muted/20">
+                  <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create New Admin
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <Label htmlFor="newAdminName">Full Name</Label>
+                      <Input
+                        id="newAdminName"
+                        value={newAdminName}
+                        onChange={(e) => setNewAdminName(e.target.value)}
+                        placeholder="Enter full name"
+                        className="mt-1"
+                      />
                     </div>
-                  ))}
+                    <div>
+                      <Label htmlFor="newAdminEmail">Email Address</Label>
+                      <Input
+                        id="newAdminEmail"
+                        type="email"
+                        value={newAdminEmail}
+                        onChange={(e) => setNewAdminEmail(e.target.value)}
+                        placeholder="Enter email address"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newAdminPassword">Password</Label>
+                      <Input
+                        id="newAdminPassword"
+                        type="password"
+                        value={newAdminPassword}
+                        onChange={(e) => setNewAdminPassword(e.target.value)}
+                        placeholder="Enter password (min 6 chars)"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newAdminRole">Role</Label>
+                      <Select value={newAdminRole} onValueChange={setNewAdminRole}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Low Admin">Low Admin</SelectItem>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleCreateAdmin}
+                    disabled={adminLoading || !newAdminEmail || !newAdminName || !newAdminPassword}
+                    className="mt-4 w-full md:w-auto"
+                  >
+                    {adminLoading ? "Creating..." : "Create Admin"}
+                  </Button>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
+                {/* Existing Admins List */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Current Admins ({admins.length})
+                  </h4>
+                  
+                  {admins.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <UserCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No additional admins created yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {admins.map((admin) => (
+                        <div
+                          key={admin.id}
+                          className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-card"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div>
+                                <h5 className="font-medium text-foreground">
+                                  {admin.full_name || 'Unnamed Admin'}
+                                </h5>
+                                <p className="text-sm text-muted-foreground">{admin.email}</p>
+                              </div>
+                              <Badge 
+                                variant={admin.role === 'Admin' ? 'default' : 'secondary'}
+                                className="ml-2"
+                              >
+                                {admin.role}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            {admin.id !== userProfile?.id && (
+                              <>
+                                <Select
+                                  value={admin.role}
+                                  onValueChange={(newRole) => handleUpdateAdminRole(admin.id, newRole, admin.full_name || admin.email)}
+                                  disabled={adminLoading}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Low Admin">Low Admin</SelectItem>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                <Button
+                                  onClick={() => handleDeleteAdmin(admin.id, admin.full_name || admin.email)}
+                                  disabled={adminLoading}
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {admin.id === userProfile?.id && (
+                              <Badge variant="outline" className="text-xs">
+                                You
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }
