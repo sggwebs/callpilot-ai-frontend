@@ -732,6 +732,103 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Google APIs Configuration */}
+            <Card className="shadow-business-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Google APIs Configuration
+                </CardTitle>
+                <CardDescription>Configure Google services for enhanced AI capabilities</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="googleApiKey">Google API Key</Label>
+                    <Input
+                      id="googleApiKey"
+                      type="password"
+                      placeholder="Enter your Google API Key"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for Google Cloud services integration
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="geminiApiKey">Gemini API Key</Label>
+                    <Input
+                      id="geminiApiKey"
+                      type="password"
+                      placeholder="Enter your Gemini API Key"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for Google Gemini AI model integration
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="googleMapsApiKey">Google Maps API Key</Label>
+                    <Input
+                      id="googleMapsApiKey"
+                      type="password"
+                      placeholder="Enter your Google Maps API Key"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for location-based services and mapping
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="googleSpeechApiKey">Google Speech-to-Text API Key</Label>
+                    <Input
+                      id="googleSpeechApiKey"
+                      type="password"
+                      placeholder="Enter your Google Speech API Key"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for advanced speech recognition capabilities
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="googleTranslateApiKey">Google Translate API Key</Label>
+                    <Input
+                      id="googleTranslateApiKey"
+                      type="password"
+                      placeholder="Enter your Google Translate API Key"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Required for real-time translation services
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h4 className="font-medium text-foreground mb-2">Getting Started with Google APIs</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Visit <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Cloud Console</a> to create API keys</li>
+                    <li>• Enable the required APIs for your project</li>
+                    <li>• Configure billing and usage limits as needed</li>
+                    <li>• Secure your API keys and restrict their usage</li>
+                  </ul>
+                </div>
+
+                <Button 
+                  onClick={() => handleSaveSettings("GoogleAPIs")}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? "Saving..." : "Save Google API Settings"}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
 
